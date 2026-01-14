@@ -63,9 +63,9 @@ def Bounded.entail (φ : Signature.BoundedFormula α n) :=
     Theory.Model Interpretion_Structure →  φ.Realize Assignment
 def Sentence.entail (φ : Signature.Sentence) :=
     Theory.Model Interpretion_Structure → φ.Realize Interpretion_Structure
-
-open FirstOrder
 -/
+open FirstOrder
+
 theorem and_def (S : FirstOrder.Language)
                 (M : Type) [S.Structure M]
                 (ρ : α → M)
