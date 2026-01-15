@@ -64,6 +64,8 @@ def Bounded.entail (φ : Signature.BoundedFormula α n) :=
 def Sentence.entail (φ : Signature.Sentence) :=
     Theory.Model Interpretion_Structure → φ.Realize Interpretion_Structure
 -/
+
+
 open FirstOrder
 
 theorem and_def (S : FirstOrder.Language)
@@ -74,6 +76,30 @@ theorem and_def (S : FirstOrder.Language)
 by
     simp
 --
+
+def S_pow (S : α → α) : ℕ → α → α
+    | 0,     x => x
+    | k + 1, x => S (S_pow S k x)
+
+structure Model where
+    elem : Type
+    zero : elem
+    S :  elem → elem
+    Ax1 : ∀ {x}, ¬ S x = zero
+    Ax2 : ∀ {x y}, S x = S y → x = y
+    Ax3 : ∀ {x}, (¬ x = zero) → ∃ y, S y = x
+    --Ax4 : ∀ {k x}, S_pow k x = x
+
+def S2 (M : Model) (x : M.elem) :=
+    M.S (M.S x)
+
+theorem Ssquared (M : Model) :
+    ∀ x y, S2 M x = S2 M y → x = y :=
+by
+intro x y h
+have h1 : M.S x = M.S y := M.Ax2 h
+have h2 : x = y := M.Ax2 h1
+exact h2
 
 universe u v
 
@@ -108,7 +134,7 @@ notation:50  "S^["k"]("t")" =>
   succPow k t
 
 def S1 : SSig.Sentence := -- First Axiom
-    ∀' (S(&(0)) ≅ zero).not
+    ∀' (S(&(0)) ≅  zero).not
 
 def S2 : SSig.Sentence := -- Second Axiom
     ∀' ∀' ((S(&(0)) ≅ S(&(1))).imp (&(0) ≅ &(1)))
@@ -123,7 +149,7 @@ def S4 (k : ℕ) : SSig.Sentence := -- Fourth Axiom, actually ℵ₀ sentences
 def STheory : SSig.Theory :=
     {S1, S2, S3} ∪ {S4 (k + 1) | k : ℕ}
 -- S4 actually represents one sentence for every natural number
--- We use k+1 to skip the trivial case x=y → x=y
+-- We use k+1 to skip over ¬ x ≅ x, which is obviously false
 
 def double_cycle : SSig.Sentence :=
     ∀' ∀' ((S^[2](&(0)) ≅ S^[2](&(1))).imp (&(0) ≅ &(1)))
@@ -150,5 +176,7 @@ by
     | ⟨0, _⟩ => x
     | ⟨1, _⟩ => y
     apply hS2_xy
-    have hS : (S(&(0)) ≅ S(&(1))).Realize default env :=
-        by
+    simp [succPow] at hSS
+    def env_Sxy : Fin 2 → M
+    |⟨0, _⟩ => S(x).realize default env
+    | ⟨1, _⟩ => S(y).realize default env
