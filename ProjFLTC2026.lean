@@ -77,11 +77,11 @@ by
 
 universe u v
 
-inductive SFunc : ℕ → Type
+inductive SFunc : α → Type
 | zero : SFunc 0
 | succ : SFunc 1
 
-inductive SRel : ℕ → Type
+inductive SRel : α → Type
 |eq : SRel 2
 
 def SSig : FirstOrder.Language := ⟨SFunc, SRel⟩ -- Simple signature with 0, S() and ≃
@@ -128,9 +128,27 @@ def STheory : SSig.Theory :=
 def double_cycle : SSig.Sentence :=
     ∀' ∀' ((S^[2](&(0)) ≅ S^[2](&(1))).imp (&(0) ≅ &(1)))
 
+
+
 theorem doubleS2 (M : Type)[SSig.Structure M]
-                 (ρ : α → M):
+                 (ρ : α ⊕ ℕ → M):
                  STheory.Model M → double_cycle.Realize M :=
 by
+
     simp
     intro h
+    intro x
+    intro y
+    intro hSS
+    have hS2 : S2.Realize M :=
+        by
+        apply h S2
+        simp [STheory]
+
+    have hS2_xy := hS2 x y
+    let env : Fin 2 → M
+    | ⟨0, _⟩ => x
+    | ⟨1, _⟩ => y
+    apply hS2_xy
+    have hS : (S(&(0)) ≅ S(&(1))).Realize default env :=
+        by
