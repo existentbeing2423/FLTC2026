@@ -1,37 +1,6 @@
 import ProjFLTC2026.Basic
 import Mathlib.ModelTheory.Semantics
 
-theorem fa_to_ex (α : Type) (P Q : α → Prop):
-    (∀ x, P x → Q x) → (∃ x, P x) → ∃ x, Q x :=
-by
-    intro h hP
-    rcases hP with ⟨ x, hx⟩
-    exact ⟨ x, h x hx⟩
-
-theorem nf_r_exnot (α : Type) (P : α → Prop) :
-  (¬∀ x, P x) →  ∃ x, ¬ P x :=
-by
-  contrapose!
-  intro h
-  exact h
-
-theorem e_comm (P Q : Prop) :
-    P ∧ Q ↔ Q ∧ P :=
-by
-    constructor
-    intro h
-    exact ⟨h.right, h.left⟩
-    intro h
-    exact ⟨h.right, h.left⟩
-
-theorem ant_switch (P Q R : Prop) :
-    (P ↔ Q) → (Q → R) → (P → R) :=
-by
-    intro h hQR hP
-    apply hQR
-    apply h.mp
-    exact hP
-
 -- from here on we shall work on model theory
 -- signatures will be encoded with LEAN Languages
 -- Interpretation Structures will be encoded with LEAN Structures
@@ -81,25 +50,48 @@ def S_pow (S : α → α) : ℕ → α → α
     | 0,     x => x
     | k + 1, x => S (S_pow S k x)
 
-structure Model where
+structure SModel where
     elem : Type
     zero : elem
     S :  elem → elem
     Ax1 : ∀ {x}, ¬ S x = zero
     Ax2 : ∀ {x y}, S x = S y → x = y
     Ax3 : ∀ {x}, (¬ x = zero) → ∃ y, S y = x
-    --Ax4 : ∀ {k x}, S_pow k x = x
+    Ax4 : ∀ {k : ℕ} {x : elem}, S_pow S k x = x
 
-def S2 (M : Model) (x : M.elem) :=
-    M.S (M.S x)
 
-theorem Ssquared (M : Model) :
-    ∀ x y, S2 M x = S2 M y → x = y :=
+theorem Ssquared (M : SModel) :
+    ∀ x y, S_pow M.S 2 x = S_pow M.S 2 y → x = y :=
 by
 intro x y h
 have h1 : M.S x = M.S y := M.Ax2 h
 have h2 : x = y := M.Ax2 h1
 exact h2
+
+theorem Sn (M : SModel) (k : ℕ) :
+    ∀ x y, S_pow M.S k x = S_pow M.S k y → x = y :=
+by
+    induction k with
+
+
+    | zero =>
+        intro x y h
+        simp [S_pow] at h
+        exact h
+    | succ d hd =>
+        intro x y h
+        have h1 : S_pow M.S d x = S_pow M.S d y :=
+            M.Ax2 h
+        apply hd at h1
+        exact h1
+
+
+
+
+
+
+
+
 
 universe u v
 
